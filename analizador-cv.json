@@ -1,0 +1,268 @@
+{
+  "name": "analizador-cv",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text }}",
+        "options": {
+          "systemMessage": "Eres un analizador de CVs profesional.\nRecibirás el texto de un CV y debes devolver ÚNICAMENTE un JSON con esta estructura exacta:\n\n{\n  \"nombre\": \"nombre completo del candidato\",\n  \"email\": \"email si aparece literalmente en el texto, sino null\",\n  \"puntuacion\": número del 1 al 10,\n  \"skills\": \"habilidades técnicas separadas por comas\",\n  \"resumen\": \"resumen profesional en 2-3 frases\"\n}\n\nREGLAS ESTRICTAS:\n- Para el campo email: solo extrae lo que aparece literalmente en el texto. Si no hay ninguna dirección de email con formato xxx@xxx.xxx, devuelve null. Nunca inventes ni deduzcas un email.\n- No añadas texto fuera del JSON. Solo el JSON.\n- No inventes ni asumas ningún dato que no esté explícitamente en el CV.\n\nCriterios de puntuación:\n- 8-10: perfil senior, experiencia relevante, skills sólidas\n- 5-7: perfil intermedio, potencial claro\n- 1-4: perfil junior o CV con poca información"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        112,
+        0
+      ],
+      "id": "e82dc559-e093-4e08-9c3f-0e0ea7f0d20a",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        112,
+        208
+      ],
+      "id": "6e36c916-5e04-4ab2-ad38-516cdcc97541",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "rMDjZRrLFXzgeJha",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "app1B1KuIzg4UADSP",
+          "mode": "list",
+          "cachedResultName": "analizador-cv",
+          "cachedResultUrl": "https://airtable.com/app1B1KuIzg4UADSP"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblLjHFFlMsFmwMK9",
+          "mode": "list",
+          "cachedResultName": "Table 1",
+          "cachedResultUrl": "https://airtable.com/app1B1KuIzg4UADSP/tblLjHFFlMsFmwMK9"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Puntuacion": "={{ $json.puntuacion }}",
+            "Nombre": "={{ $json.nombre }}",
+            "Email": "={{ $json.email }}",
+            "Skills": "={{ $json.skills }}",
+            "Resumen": "={{ $json.resumen }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Nombre",
+              "displayName": "Nombre",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Puntuacion",
+              "displayName": "Puntuacion",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Skills",
+              "displayName": "Skills",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Resumen",
+              "displayName": "Resumen",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        688,
+        0
+      ],
+      "id": "1e651c5f-dffe-479e-b902-b222a00f03fa",
+      "name": "Añadir CV",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "VpWNzWobVL1YCUwG",
+          "name": "Airtable Personal Access Token account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.output;\nconst cleaned = raw.replace(/```json|```/g, '').trim();\nconst parsed = JSON.parse(cleaned);\n\nreturn [{\n  json: {\n    nombre: parsed.nombre || \"Sin nombre\",\n    email: parsed.email || \"NULL\",\n    puntuacion: parsed.puntuacion || 0,\n    skills: parsed.skills || \"No especificado\",\n    resumen: parsed.resumen || \"No especificado\"\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        0
+      ],
+      "id": "a4063c01-2f4b-427c-9367-3fd501c118d0",
+      "name": "Categorizar campos"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "=csv",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -96,
+        0
+      ],
+      "id": "5889aceb-fb46-4643-bda6-118584a7217c",
+      "name": "Extracción de texto"
+    },
+    {
+      "parameters": {
+        "formTitle": "PDF de prueba",
+        "formDescription": "Introduce el pdf que quieres que analicemos",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "csv",
+              "fieldType": "file"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -304,
+        0
+      ],
+      "id": "6cbecb1c-c620-4ff9-9d6e-567b8aa662d2",
+      "name": "Formulario de entrada",
+      "webhookId": "32347305-77a8-4d11-865b-475dc8752863"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Categorizar campos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Categorizar campos": {
+      "main": [
+        [
+          {
+            "node": "Añadir CV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extracción de texto": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formulario de entrada": {
+      "main": [
+        [
+          {
+            "node": "Extracción de texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "bd5c0342-99b0-4fea-9e46-cf9e3629b689",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0e85308725cbfc971a4de16b0841e4af900f9cbf63ae24a06d18de104c10a4bd"
+  },
+  "id": "4FSRdsj4MdJJpPyb",
+  "tags": []
+}
