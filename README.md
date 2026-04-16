@@ -8,9 +8,9 @@ Built with n8n (self-hosted), Groq API and Airtable.
 
 ## Demo
 
-![n8n workflow](assets/flujo.png)
+![n8n workflow](assets/flujo analizador-cv.png)
 
-![Airtable results](assets/airtable-tabla.png)
+![Airtable results](assets/screenshot-airtable-analizador-cv's.png)
 
 ---
 
